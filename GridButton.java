@@ -17,6 +17,7 @@ public class GridButton extends JLabel{
     private int value;
     private boolean open = false;
     private boolean marked = false;
+    private boolean lost = false; // If it was this button that was clicked to lose the game
 
     public GridButton(int row, int column, int value){
 
@@ -59,6 +60,14 @@ public class GridButton extends JLabel{
 
     public int getColumn(){
         return COLUMN;
+    }
+
+    public boolean getLost() {
+        return lost;
+    }
+
+    public void setLost(boolean lost) {
+        this.lost = lost;
     }
 
     public void mark(){
@@ -111,6 +120,8 @@ public class GridButton extends JLabel{
                 break;
                 case(-1):
                 setButtonIcon("img/bomb.png", "B");
+                // Set the background of the clicked square to be red
+                if(lost) setBackground(Colours.counter);
                 break;
             }
             

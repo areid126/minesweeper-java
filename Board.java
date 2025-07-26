@@ -36,6 +36,14 @@ public class Board{
         return WIDTH;
     }
 
+    public boolean isWon() {
+        return won;
+    }
+
+    public boolean isLost() {
+        return lost;
+    }
+
     // Constructor to get the values for the board
     public Board(int width, int height, int mines){
         this.WIDTH = width;
@@ -86,8 +94,8 @@ public class Board{
         }
     }
 
-    // Method to open a specific square of the board
-    public void open(int row, int column){
+    // Method to open a specific square of the board (returns false when the game is lost)
+    public boolean open(int row, int column){
         display.get(row).set(column, true); // Set the clicked square to be open
 
         // Perform the checks on the number in that square
@@ -95,14 +103,31 @@ public class Board{
         if(value == -1){
             // The player has clicked a bomb and so the game ends
             lost = true;
-            System.out.println("The game has been lost");
-            // need to open the whole game to show the game has been lost
+            // System.out.println("The game has been lost");
+            openBombs(); // Open all the cells that contain bombs
+            return false;
         }
         if(value == 0){
             // Cascade the squares so that everything opens
             cascade(row, column);
         }
         // Does not need to do anything else if any other square is clicked
+
+        // Return true if the game was not lost
+        return true;
+    }
+
+    // Open all the cells that contain bombs
+    public void openBombs() {
+        for(int i = 0; i < HEIGHT; i++){
+            for(int j = 0; j < WIDTH; j++){
+                // If a cell contains a mine
+                if(board.get(i).get(j) == -1){
+                    // Set it to be open on the display board
+                    display.get(i).set(j, true);
+                }
+            }
+        }
     }
 
     // Version of open that takes the coords as an array
@@ -185,7 +210,10 @@ public class Board{
                 }
             }
         }
-        System.out.println("The game has been won");
+        // System.out.println("The game has been won");
+
+        // Set won to be true
+        won = true;
         return true;
     }
 

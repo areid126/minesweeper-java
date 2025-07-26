@@ -26,6 +26,7 @@ public class Display {
     private Board board = new Board(8, 8, 10);
     // JPanel panel = new JPanel(new GridLayout(board.getHeight(), board.getWidth()));
     private ArrayList<ArrayList<GridButton>> buttons = new ArrayList<>();
+    private JLabel restart = new JLabel();
 
 
     // Method to set up the board
@@ -57,7 +58,7 @@ public class Display {
         mineCount.setBorder(innerBorder);
 
         // Layout the restart button
-        JLabel restart = new JLabel();
+        restart = new JLabel();
         // Layout the button
         restart.setBorder(outerBorder);
         restart.setBackground(Colours.unopened);
@@ -115,15 +116,34 @@ public class Display {
         
                     @Override
                     public void mouseReleased(MouseEvent e){
+                        // Do nothing if the board has already been won or lost
+                        if (board.isWon() || board.isLost()) return;
+
                         // If the left click is pressed
                         if(e.getButton() == MouseEvent.BUTTON1){
-                            board.open(button.getRow(), button.getColumn());
+                            boolean notLost = board.open(button.getRow(), button.getColumn());
+
+                            // Handle if the game was lost
+                            if(!notLost) {
+                                // Indicate that this was the button that lost the game
+                                button.setLost(true);
+                                handleLoss();
+                            }
+
                             updateDisplay(); // Update the display after clicking a button
-                        } // If the right click is pressed
+                        } 
+                        
+                        // If the right click is pressed
                         if(e.getButton() == MouseEvent.BUTTON3){
                             button.mark();
                         }
-                        board.checkWon(); // Check if the game has been won after every click
+
+                        // Handle if the game has been won
+                        boolean won = board.checkWon();
+                        if (won) {
+                           handleWin();
+                        }
+
                     }
                 });
                 buttons.get(i).add(button); // add the buttons to the list of buttons
@@ -146,6 +166,34 @@ public class Display {
         frame.pack();
         frame.setResizable(false);
         frame.setVisible(true);
+    }
+
+    // Method to handle losing the game
+    public void handleLoss() {
+        // Set the reset button icon
+        try {
+            BufferedImage buttonIcon = ImageIO.read(new File("img/dead.png"));
+            restart.setIcon(new ImageIcon(buttonIcon.getScaledInstance(25, -1, Image.SCALE_DEFAULT))); // Set the icon on the button
+            restart.setText("");
+        } catch (IOException e) {
+            restart.setText("L");
+        }
+
+        // Stop the timer (for later when the timer is implemented)
+    }
+
+    // Method to handle winning the game
+    public void handleWin() {
+        // Set the reset button icon
+        try {
+            BufferedImage buttonIcon = ImageIO.read(new File("img/sunglasses.png"));
+            restart.setIcon(new ImageIcon(buttonIcon.getScaledInstance(25, -1, Image.SCALE_DEFAULT))); // Set the icon on the button
+            restart.setText("");
+        } catch (IOException e) {
+            restart.setText("W");
+        }
+
+        // Stop the timer (for later when the timer is implemented)
     }
 
     // Method to update the display
