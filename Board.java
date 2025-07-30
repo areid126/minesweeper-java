@@ -2,15 +2,6 @@ import java.util.*;
 
 public class Board{
 
-    public static void main(String[] args){
-        Board board = new Board(8, 8, 10); // Beginner
-        Board board2 = new Board(16, 16, 40); // Intermediate
-        Board board3 = new Board(30, 16, 99); // Expert
-        board.print();
-        board2.print();
-        board3.print();
-    }
-
     // Attributes of the board
     private final int WIDTH;
     private final int HEIGHT;
@@ -27,12 +18,24 @@ public class Board{
     // 0 means closed, 1 means open, -1 means flagged, -2 means the mine that lost the game
     private ArrayList<ArrayList<Integer>> display = new ArrayList<>(); 
 
-    // Constants
+    // Constants for the board display options
     public static final int OPEN = 1;
     public static final int CLOSED = 0;
     public static final int FLAGGED = -1;
     public static final int LOST = -2;
+    public static final int NO_MINE = -3;
     public static final int MINE = -1;
+
+    // Constant values for board sizes
+    public static final int BEGINNER_HEIGHT = 8;
+    public static final int BEGINNER_WIDTH = 8;
+    public static final int BEGINNER_MINES = 10;
+    public static final int INTERMEDIATE_HEIGHT = 16;
+    public static final int INTERMEDIATE_WIDTH = 16;
+    public static final int INTERMEDIATE_MINES = 40;
+    public static final int EXPERT_HEIGHT = 16;
+    public static final int EXPERT_WIDTH = 30;
+    public static final int EXPERT_MINES = 99;
 
 
     // Getter for cell of the board
@@ -40,6 +43,10 @@ public class Board{
         return board.get(row).get(column);
     }
 
+    public int getDisplay(int row, int column) {
+        return display.get(row).get(column);
+    }
+ 
     public ArrayList<ArrayList<Integer>> getDisplay(){
         return display;
     }
@@ -139,9 +146,13 @@ public class Board{
         for(int i = 0; i < HEIGHT; i++){
             for(int j = 0; j < WIDTH; j++){
                 // If a cell contains a mine open it (unless it is the cell that lost the game)
-                if(board.get(i).get(j) == MINE && display.get(i).get(j) != LOST){
+                if(board.get(i).get(j) == MINE && display.get(i).get(j) == CLOSED){
                     // Set it to be open on the display board
                     display.get(i).set(j, OPEN);
+                }
+                // If a mine is flagged but does not contain a mine
+                if(board.get(i).get(j) != MINE && display.get(i).get(j) == FLAGGED) {
+                    display.get(i).set(j, NO_MINE);
                 }
             }
         }

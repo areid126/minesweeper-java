@@ -1,10 +1,8 @@
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
-import javax.swing.border.Border;
 import javax.swing.border.MatteBorder;
 import java.awt.*;
-import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -14,12 +12,15 @@ public class GridButton extends JLabel{
     private final int ROW;
     private final int COLUMN;
     private Board game; // The game this button is associated with
+    private int currentValue;
+    private int currentDisplay;
 
     public GridButton(int row, int column, int value, Board game){
 
         this.ROW = row;
         this.COLUMN = column;
-        // this.value = value;
+        this.currentValue = value; // Start with the initial value
+        this.currentDisplay = Board.CLOSED; // Start with all cells closed
         this.game = game;
 
         // Set up the basic appearance of all buttons
@@ -44,14 +45,29 @@ public class GridButton extends JLabel{
         return COLUMN;
     }
 
+    // Method that gets whether the appearance of the button needs to be updated
+    public boolean checkUpdate() {
+        int display = game.getDisplay(ROW, COLUMN);
+        int value = game.get(ROW, COLUMN);
+        
+        // If the current values are the same as the ones in the board do not update
+        if (display == currentDisplay && value == currentValue) return false;
+
+        return true; // The display needs to be updated
+    }
+
     // Sets up the appearance of the button based on its display cell
     public void setAppearance() {
-        int display = game.getDisplay().get(ROW).get(COLUMN);
+        int display = game.getDisplay(ROW, COLUMN);
+        currentDisplay = display; // Update the current display
+        currentValue = game.get(ROW, COLUMN); // Update the current value
 
         // If the cell is hidden then hide it
         if (display == Board.CLOSED) setAppearanceHidden();
         // If the cell is marked then mark it
         else if (display == Board.FLAGGED) setAppearanceMarked();
+        // If the cell is incorrectly marked then mark it as incorrect
+        else if (display == Board.NO_MINE) setAppearanceIncorrectlyMarked();
         // If the cell is open then open it
         else setAppearanceOpen();
     }
@@ -75,6 +91,17 @@ public class GridButton extends JLabel{
         setText("");
         // Set the flag icon for the button
         setButtonIcon("img/flag.png", "F");
+    }
+
+    public void setAppearanceIncorrectlyMarked() {
+        // Set the border of the cell
+        setBorder(new MatteBorder(1, 1, 0, 0, Colours.unopenedBottom));
+        // Set background colour
+        setBackground(Colours.unopened);
+        // Make sure there is no text
+        setText("");
+        // Set the incorrect flag icon for the button
+        setButtonIcon("img/incorrectMine.png", "N");
     }
 
     public void setAppearanceOpen() {
@@ -118,8 +145,10 @@ public class GridButton extends JLabel{
             } catch (IOException e) {
                 // If there is an error loading the image then set the text to be the altText instead
                 setText(altText);
-                // Set the foreground colour to be black when displaying altText
-                setForeground(Color.BLACK);
+                // Set the altText to be red when displaying flags
+                if (altText.equals("F")) setForeground(Colours.counter);
+                // Set the foreground colour to be black when displaying altText for mines
+                else setForeground(Color.BLACK);
             }
         }
         // Unset the icon if there is no icon to set

@@ -21,11 +21,10 @@ public class Display {
     // Create the frame to contain the board
     private JFrame frame = new JFrame();
     // Variables that define board size
-    private int width = BEGINNER_WIDTH;
-    private int height = BEGINNER_HEIGHT;
-    private int mines = BEGINNER_MINES;
+    private int width = Board.BEGINNER_WIDTH;
+    private int height = Board.BEGINNER_HEIGHT;
+    private int mines = Board.BEGINNER_MINES;
     private Board board = new Board(width, height, mines);
-    // JPanel panel = new JPanel(new GridLayout(board.getHeight(), board.getWidth()));
     private ArrayList<ArrayList<GridButton>> buttons = new ArrayList<>();
     private JLabel restart = new JLabel();
     private JLabel mineCount = new JLabel();
@@ -41,23 +40,10 @@ public class Display {
     private long startTime;
     private JLabel timerLabel;
 
-    // Constant values for board sizes
-    public static final int BEGINNER_HEIGHT = 8;
-    public static final int BEGINNER_WIDTH = 8;
-    public static final int BEGINNER_MINES = 10;
-    public static final int INTERMEDIATE_HEIGHT = 16;
-    public static final int INTERMEDIATE_WIDTH = 16;
-    public static final int INTERMEDIATE_MINES = 40;
-    public static final int EXPERT_HEIGHT = 16;
-    public static final int EXPERT_WIDTH = 30;
-    public static final int EXPERT_MINES = 99;
-
     // Constant values for different boards
     private static final int BEGINNER = 1;
     private static final int INTERMEDIATE = 2;
     private static final int EXPERT = 3;
-
-
 
     // Method to set up the board
     public void setUpFrame(){
@@ -78,7 +64,6 @@ public class Display {
         beginner.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.out.println("Beginner option selected");
                 // Change the size of the board
                 changeBoardSize(BEGINNER);
             }
@@ -87,7 +72,6 @@ public class Display {
         intermediate.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.out.println("Intermediate option selected");
                 // Change the size of the board
                 changeBoardSize(INTERMEDIATE);
             }
@@ -96,7 +80,6 @@ public class Display {
         expert.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.out.println("Expert option selected");
                 // Change the size of the board
                 changeBoardSize(EXPERT);
             }
@@ -142,8 +125,7 @@ public class Display {
         restart.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e){
-                // Restart the game
-                handleRestart();
+                // Do nothing
             }
 
             @Override
@@ -163,7 +145,8 @@ public class Display {
 
             @Override
             public void mouseReleased(MouseEvent e){
-                // Do nothing
+                // Restart the game
+                handleRestart();
             }
         });
 
@@ -217,18 +200,24 @@ public class Display {
     // Method for setting up the grid of buttons
     public void setUpGameGrid() {
         BevelBorder innerBorder = new BevelBorder(BevelBorder.LOWERED, Colours.unopenedTop, Colours.unopenedTop, Colours.unopenedBottom, Colours.unopenedBottom);
-        System.out.println(board.getHeight() + " " +  board.getWidth());
-
 
         // Create the grid for the board
-        panel = new JPanel(new GridLayout(board.getHeight(), board.getWidth()));
+        panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         buttons = new ArrayList<>();
         
         for(int i = 0; i < board.getHeight(); i++){
             buttons.add(new ArrayList<>());
+            // Create a new row for the buttons
+            JPanel row = new JPanel();
+            row.setLayout(new BoxLayout(row, BoxLayout.X_AXIS));
+            panel.add(row);
             for(int j = 0; j < board.getWidth(); j++){
                 
                 GridButton button = new GridButton(i, j, board.get(i, j), board);
+                button.setPreferredSize(new Dimension(20, 20));
+                button.setMinimumSize(new Dimension(20, 20));
+                button.setMaximumSize(new Dimension(20, 20));
                 button.addMouseListener(new MouseListener() {
                     @Override
                     public void mouseClicked(MouseEvent e){
@@ -249,6 +238,10 @@ public class Display {
         
                     @Override
                     public void mousePressed(MouseEvent e){
+                        // Only register click events when the game is not won or lost
+                        if (board.isLost() || board.isWon()) return;
+
+                        setResetIcon("img/shocked.png", "O");
 
                         // If the left click is pressed then log it
                         if(e.getButton() == MouseEvent.BUTTON1) {
@@ -258,10 +251,8 @@ public class Display {
                         // If the right mouse button is clicked then mark the cell
                         if(e.getButton() == MouseEvent.BUTTON3){
                             rightClick = true;
-                            // int flags = board.rightClick(button.getRow(), button.getColumn());
-                            flags = board.rightClick(currentRow, currentColumn);
-                            // Use the number of flags to update the number of unflagged mines
-
+                            
+                            board.rightClick(currentRow, currentColumn);
                             // Update the display after clicking a button
                             updateDisplay();
                         }
@@ -269,6 +260,10 @@ public class Display {
         
                     @Override
                     public void mouseReleased(MouseEvent e){
+                        // Only register click events when the game is not won or lost
+                        if (board.isLost() || board.isWon()) return;
+
+                        setResetIcon("img/smile.png", "S");
 
                         // If the right mouse button is released and the left is not being pressed do nothing
                         if(e.getButton() == MouseEvent.BUTTON3 && !leftClick) {
@@ -283,10 +278,8 @@ public class Display {
                             leftClick = false;
 
                             // If the right mouse button is also being clicked cascade the cell
-                            if (rightClick) {
-                                // res = board.doubleClick(button.getRow(), button.getColumn());
-                                res = board.doubleClick(currentRow, currentColumn);
-                            }
+                            if (rightClick) res = board.doubleClick(currentRow, currentColumn);
+                            
 
                             // Otherwise open the square normally
                             else {
@@ -296,7 +289,6 @@ public class Display {
                                     timer.start();
                                 }
 
-                                // res = board.leftClick(button.getRow(), button.getColumn());
                                 res = board.leftClick(currentRow, currentColumn);
                             }
                         } 
@@ -306,15 +298,11 @@ public class Display {
                             rightClick = false;
 
                             // If the left mouse button was also being clicked at the same time cascade the square
-                            if (leftClick) {
-                                // res = board.doubleClick(button.getRow(), button.getColumn());
-                                res = board.doubleClick(currentRow, currentColumn);
-                            }
+                            if (leftClick) res = board.doubleClick(currentRow, currentColumn);
                         }
 
                         // Handle if the game was lost
                         if (res == -1) handleLoss();
-
                         // Handle if the game was won
                         if (res == 1) handleWin();
                         
@@ -325,17 +313,13 @@ public class Display {
                 });
                 button.setAppearance(); // Set the appearance of the button
                 buttons.get(i).add(button); // add the buttons to the list of buttons
-                panel.add(button);
+                row.add(button);
             }
         }
 
         // Add the correct border to the panel
         panel.setBorder(BorderFactory.createCompoundBorder(new EmptyBorder(10, 0, 0, 0), innerBorder));
         panel.setBackground(Colours.unopened);
-        int size = 20, gridWidth = (board.getWidth()*size) - 3, gridHeight = (board.getHeight()*size) - 2;
-        panel.setPreferredSize(new Dimension(gridWidth, gridHeight));
-        panel.setMinimumSize(new Dimension(gridWidth, gridHeight));
-        panel.setMaximumSize(new Dimension(gridWidth, gridHeight));
         mainPanel.add(panel);
     }
 
@@ -343,9 +327,7 @@ public class Display {
     public void handleLoss() {
         // Set the reset button icon
         setResetIcon("img/dead.png", "L");
-
-
-        // Stop the timer (for later when the timer is implemented)
+        // Stop the timer
         timer.stop();
     }
 
@@ -353,8 +335,7 @@ public class Display {
     public void handleWin() {
         // Set the reset button icon
         setResetIcon("img/sunglasses.png", "W");
-
-        // Stop the timer (for later when the timer is implemented)
+        // Stop the timer
         timer.stop();
     }
 
@@ -392,20 +373,18 @@ public class Display {
 
         // Update the size variables and create the new board
         if (size == BEGINNER) { // Set up beginner size board
-            width = 8; height = 8; mines = 10;
-            board = new Board(BEGINNER_WIDTH, BEGINNER_HEIGHT, BEGINNER_MINES);
+            width = Board.BEGINNER_WIDTH; height = Board.BEGINNER_HEIGHT; mines = Board.BEGINNER_MINES;
         }
         else if (size == INTERMEDIATE) { // Set up intermediate size board
-            width = 16; height = 16; mines = 40;
-            System.out.println("Setting the board to be " + INTERMEDIATE_WIDTH + "x" + INTERMEDIATE_HEIGHT);
-            board = new Board(INTERMEDIATE_WIDTH, INTERMEDIATE_HEIGHT, INTERMEDIATE_MINES);
+            width = Board.INTERMEDIATE_WIDTH; height = Board.INTERMEDIATE_HEIGHT; mines = Board.INTERMEDIATE_MINES;
         }
         else if (size == EXPERT) { // Set up expect size board
-            width = 30; height = 16; mines = 99;
-            System.out.println("Setting the board to be " + INTERMEDIATE_WIDTH + "x" + INTERMEDIATE_HEIGHT);
-            board = new Board(EXPERT_WIDTH, EXPERT_HEIGHT, EXPERT_MINES);
+            width = Board.EXPERT_WIDTH; height = Board.EXPERT_HEIGHT; mines = Board.EXPERT_MINES;
         }
         else return; // Do nothing if the board is not a defined size
+
+        // Create the new board
+        board = new Board(width, height, mines);
 
         // Remove the old panel from the frame
         mainPanel.remove(panel);
@@ -423,7 +402,7 @@ public class Display {
 
         // Update the display
         frame.pack();
-        frame.revalidate(); 
+        updateDisplay();
     }
 
     // Method to set the icon of the reset button
@@ -431,9 +410,14 @@ public class Display {
         try {
             BufferedImage buttonIcon = ImageIO.read(new File(icon));
             restart.setIcon(new ImageIcon(buttonIcon.getScaledInstance(25, -1, Image.SCALE_DEFAULT))); // Set the icon on the button
-            restart.setText("");
+
         } catch (IOException e) {
+            restart.setHorizontalAlignment(SwingConstants.CENTER);
+            restart.setVerticalAlignment(SwingConstants.CENTER);
+            restart.setPreferredSize(new Dimension(30, 30));
             restart.setText(altText);
+            restart.setForeground(Colours.YELLOW);
+            restart.setFont(new Font(Font.DIALOG, Font.BOLD, 20));
         }
     }
 
@@ -454,8 +438,8 @@ public class Display {
         // Update the appearance of the grid buttons
         for(int i = 0; i < board.getDisplay().size(); i++){
             for(int j = 0; j < board.getDisplay().get(i).size(); j++){
-                // Update the appearance of every button
-                buttons.get(i).get(j).setAppearance();
+                // Update the appearance of buttons that need their appearance updated
+                if(buttons.get(i).get(j).checkUpdate()) buttons.get(i).get(j).setAppearance();
             }
         }
 
