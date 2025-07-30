@@ -23,7 +23,11 @@ public class Display {
 
     // Create the frame to contain the board
     private JFrame frame = new JFrame();
-    private Board board = new Board(8, 8, 10);
+    // Variables that define board size
+    private int width = 8;
+    private int height = 8;
+    private int mines = 10;
+    private Board board = new Board(width, height, mines);
     // JPanel panel = new JPanel(new GridLayout(board.getHeight(), board.getWidth()));
     private ArrayList<ArrayList<GridButton>> buttons = new ArrayList<>();
     private JLabel restart = new JLabel();
@@ -69,13 +73,36 @@ public class Display {
         restart.setBackground(Colours.unopened);
         restart.setOpaque(true);
         // Add the icon to the button
-        try {
-            BufferedImage buttonIcon = ImageIO.read(new File("img/smile.png"));
-            restart.setIcon(new ImageIcon(buttonIcon.getScaledInstance(25, -1, Image.SCALE_DEFAULT))); // Set the icon on the button
-            restart.setText("");
-        } catch (IOException e) {
-            restart.setText("S");
-        }
+        setResetIcon("img/smile.png", "S");
+        // Add a mouse listener to the restart button
+        restart.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent e){
+                // Do nothing
+                handleRestart();
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e){
+                // Do nothing
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e){
+                // Do nothing
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e){
+                // Do nothing
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e){
+                // Do nothing
+            }
+        });
+
 
         JLabel timer = new JLabel("000");
         timer.setForeground(Colours.counter);
@@ -225,6 +252,36 @@ public class Display {
         setResetIcon("img/sunglasses.png", "W");
 
         // Stop the timer (for later when the timer is implemented)
+    }
+
+    // Method to handle restarting the game
+    public void handleRestart() {
+        // Change the board object
+        board = new Board(width, height, mines);
+
+        // Update the board associated with the display icons
+        for(int i = 0; i < buttons.size(); i++){
+            for(int j = 0; j < buttons.get(i).size(); j++){
+                // Update the appearance of every button
+                buttons.get(i).get(j).setGame(board);
+                buttons.get(i).get(j).setAppearance();
+            }
+        }
+
+        // Change the reset icon to be the default icon
+        setResetIcon("img/smile.png", "S");
+        
+        // Reset the timer
+        
+        // Reset the flag counter
+        
+        // Update the display
+        frame.revalidate(); 
+    }
+
+    // Method to handle changing board size
+    public void changeBoardSize() {
+
     }
 
     // Method to set the icon of the reset button
