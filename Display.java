@@ -31,11 +31,12 @@ public class Display {
     // JPanel panel = new JPanel(new GridLayout(board.getHeight(), board.getWidth()));
     private ArrayList<ArrayList<GridButton>> buttons = new ArrayList<>();
     private JLabel restart = new JLabel();
+    private JLabel mineCount = new JLabel();
     private boolean rightClick = false;
     private boolean leftClick = false;
     private int currentRow = 0;
     private int currentColumn = 0;
-
+    private int flags = 0;
 
 
     // Method to set up the board
@@ -59,9 +60,10 @@ public class Display {
         mainPanel.add(headerPanel);
 
         // Add the fields needed for the header
-        JLabel mineCount = new JLabel("099");
+        mineCount.setText(formatInt(mines - flags));
         mineCount.setForeground(Colours.counter);
-        mineCount.setFont(new Font("Bitstream Vera Sans Mono", Font.BOLD, 20));
+        // Bitstream Vera Sans Mono
+        mineCount.setFont(new Font("monospace", Font.BOLD, 20));
         mineCount.setBackground(Color.BLACK);
         mineCount.setOpaque(true);
         mineCount.setBorder(innerBorder);
@@ -104,7 +106,7 @@ public class Display {
         });
 
 
-        JLabel timer = new JLabel("000");
+        JLabel timer = new JLabel(formatInt(0));
         timer.setForeground(Colours.counter);
         timer.setFont(new Font("Bitstream Vera Sans Mono", Font.BOLD, 20));
         timer.setBackground(Color.BLACK);
@@ -156,7 +158,7 @@ public class Display {
                         if(e.getButton() == MouseEvent.BUTTON3){
                             rightClick = true;
                             // int flags = board.rightClick(button.getRow(), button.getColumn());
-                            int flags = board.rightClick(currentRow, currentColumn);
+                            flags = board.rightClick(currentRow, currentColumn);
                             // Use the number of flags to update the number of unflagged mines
 
                             // Update the display after clicking a button
@@ -274,6 +276,8 @@ public class Display {
         // Reset the timer
         
         // Reset the flag counter
+        flags = 0;
+        mineCount.setText(formatInt(mines - flags));
         
         // Update the display
         frame.revalidate(); 
@@ -295,14 +299,30 @@ public class Display {
         }
     }
 
+    // Method to format an integer for string printing for the counters
+    public String formatInt(int num) {
+        if (num > 999) num = 999; // Never display a number greater than 999
+        if (num < -99) num = -99; // Never display a number less than -99
+
+        // If the number is positive format it to have three 0s
+        if (num >= 0) return String.format("%03d", num);
+
+        // If the number is negative then change the width of the minus sign and format it to two digits
+        else return "–" + String.format("%02d", Math.abs(num));
+    }
+
     // Method to update the display
     public void updateDisplay(){
+        // Update the appearance of the grid buttons
         for(int i = 0; i < board.getDisplay().size(); i++){
             for(int j = 0; j < board.getDisplay().get(i).size(); j++){
                 // Update the appearance of every button
                 buttons.get(i).get(j).setAppearance();
             }
         }
+
+        // Update the number of mines unflagged
+        mineCount.setText(formatInt(mines - flags));
 
         // Reload the display
         frame.revalidate(); 
