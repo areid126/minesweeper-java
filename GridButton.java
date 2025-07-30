@@ -3,7 +3,6 @@ import javax.swing.*;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.Border;
 import javax.swing.border.MatteBorder;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
@@ -14,44 +13,27 @@ public class GridButton extends JLabel{
     // Store the buttons position in the grid and its value
     private final int ROW;
     private final int COLUMN;
-    private int value;
-    private boolean open = false;
-    private boolean marked = false;
-    private boolean lost = false; // If it was this button that was clicked to lose the game
+    private Board game; // The game this button is associated with
 
-    public GridButton(int row, int column, int value){
+    public GridButton(int row, int column, int value, Board game){
 
         this.ROW = row;
         this.COLUMN = column;
-        this.value = value;
+        // this.value = value;
+        this.game = game;
 
-        int size = 0;
-
-        // setMinimumSize(new Dimension(size, size));
-        setPreferredSize(new Dimension(size, size));
-        // setMaximumSize(new Dimension(size, size));
-
-
-        // Set basic layout things
-        setBorder(new BevelBorder(BevelBorder.RAISED, Colours.unopenedTop, Colours.unopenedBottom));
-        setBackground(Colours.unopened);
-        setOpaque(true);
+        // Set up the basic appearance of all buttons
         setFont(new Font(Font.DIALOG, Font.BOLD, 15));
         setHorizontalAlignment(SwingConstants.CENTER);
         setVerticalAlignment(SwingConstants.CENTER);
-        // setBorderPainted(false);
-        // setFocusPainted(false);
         setFocusable(false);
-        // setRolloverEnabled(false);
-        // setContentAreaFilled(false);
+        setOpaque(true);
+        setForeground(Color.BLACK);
     }
 
-    public int[] getPosition(){
-        return new int[]{ROW, COLUMN};
-    }
-
-    public int getValue(){
-        return value;
+    // Change the game associated with the board
+    public void setGame(Board game) {
+        this.game = game;
     }
 
     public int getRow(){
@@ -62,70 +44,65 @@ public class GridButton extends JLabel{
         return COLUMN;
     }
 
-    public boolean getLost() {
-        return lost;
+    // Sets up the appearance of the button based on its display cell
+    public void setAppearance() {
+        int display = game.getDisplay().get(ROW).get(COLUMN);
+
+        // If the cell is hidden then hide it
+        if (display == Board.CLOSED) setAppearanceHidden();
+        // If the cell is marked then mark it
+        else if (display == Board.FLAGGED) setAppearanceMarked();
+        // If the cell is open then open it
+        else setAppearanceOpen();
     }
 
-    public void setLost(boolean lost) {
-        this.lost = lost;
+    public void setAppearanceHidden() {
+        // Set the border
+        setBorder(new BevelBorder(BevelBorder.RAISED, Colours.unopenedTop, Colours.unopenedBottom));
+        // Set background colour
+        setBackground(Colours.unopened);
+        // Make sure there is no text or icon
+        setText("");
+        setIcon(null);
     }
 
-    public void mark(){
-        if(!open){
-            marked = !marked;
-            if(marked){
-                setButtonIcon("img/flag.png", "F");
-            }
-            else{
-                setButtonIcon(null, "");
-            }  
-        }
+    public void setAppearanceMarked() {
+        // Set the border
+        setBorder(new BevelBorder(BevelBorder.RAISED, Colours.unopenedTop, Colours.unopenedBottom));
+        // Set background colour
+        setBackground(Colours.unopened);
+        // Make sure there is no text
+        setText("");
+        // Set the flag icon for the button
+        setButtonIcon("img/flag.png", "F");
     }
 
-    // Method to open a button after it has been pressed
-    public void open() {
-        if(!marked){
-            open = true;
-            setText(value + "");
-            setIcon(null); // Remove the icon when opening the cell
-            setBorder(new MatteBorder(1, 1, 0, 0, Colours.unopenedBottom));
-            // setRolloverEnabled(false);
-            switch(value){
-                case(0):
-                setText("");
-                break;
-                case(1):
-                setForeground(Colours.ONE);
-                break;
-                case(2):
-                setForeground(Colours.TWO);
-                break;
-                case(3):
-                setForeground(Colours.THREE);
-                break;
-                case(4):
-                setForeground(Colours.FOUR);
-                break;
-                case(5):
-                setForeground(Colours.FIVE);
-                break;
-                case(6):
-                setForeground(Colours.SIX);
-                break;
-                case(7):
-                setForeground(Colours.SEVEN);
-                break;
-                case(8):
-                setForeground(Colours.EIGHT);
-                break;
-                case(-1):
-                setButtonIcon("img/bomb.png", "B");
-                // Set the background of the clicked square to be red
-                if(lost) setBackground(Colours.counter);
-                break;
-            }
-            
-        }
+    public void setAppearanceOpen() {
+        int value = game.get(ROW, COLUMN);
+
+        // Set the value of the cell
+        if (value != -1 && value != 0) setText(value + "");
+        // Remove the icon when opening the cell
+        if (value != -1) setIcon(null); 
+        // Set the border of the cell
+        setBorder(new MatteBorder(1, 1, 0, 0, Colours.unopenedBottom));
+        // Set background colour
+        if (game.getDisplay().get(ROW).get(COLUMN) != Board.LOST) setBackground(Colours.unopened);
+        
+        // Set the foreground colour based on the value of the cell
+        if (value == 0) setText("");
+        else if (value == 1) setForeground(Colours.ONE);
+        else if (value == 2) setForeground(Colours.TWO);
+        else if (value == 3) setForeground(Colours.THREE);
+        else if (value == 4) setForeground(Colours.FOUR);
+        else if (value == 5) setForeground(Colours.FIVE);
+        else if (value == 6) setForeground(Colours.SIX);
+        else if (value == 7) setForeground(Colours.SEVEN);
+        else if (value == 8) setForeground(Colours.EIGHT);
+        else if (value == -1) setButtonIcon("img/bomb.png", "B");
+
+        // If the button is for the mine that lost the game then change the background colour
+        if (game.getDisplay().get(ROW).get(COLUMN) == Board.LOST) setBackground(Colours.counter);
     }
 
     // Function for getting an icon
@@ -141,6 +118,8 @@ public class GridButton extends JLabel{
             } catch (IOException e) {
                 // If there is an error loading the image then set the text to be the altText instead
                 setText(altText);
+                // Set the foreground colour to be black when displaying altText
+                setForeground(Color.BLACK);
             }
         }
         // Unset the icon if there is no icon to set

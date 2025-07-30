@@ -27,6 +27,11 @@ public class Display {
     // JPanel panel = new JPanel(new GridLayout(board.getHeight(), board.getWidth()));
     private ArrayList<ArrayList<GridButton>> buttons = new ArrayList<>();
     private JLabel restart = new JLabel();
+    private boolean rightClick = false;
+    private boolean leftClick = false;
+    private int currentRow = 0;
+    private int currentColumn = 0;
+
 
 
     // Method to set up the board
@@ -88,64 +93,101 @@ public class Display {
 
         // Create the grid for the board
         JPanel panel = new JPanel(new GridLayout(board.getHeight(), board.getWidth()));
+        
         for(int i = 0; i < board.getHeight(); i++){
             buttons.add(new ArrayList<>());
             for(int j = 0; j < board.getWidth(); j++){
                 
-                GridButton button = new GridButton(i, j, board.get(i, j));
+                GridButton button = new GridButton(i, j, board.get(i, j), board);
                 button.addMouseListener(new MouseListener() {
                     @Override
                     public void mouseClicked(MouseEvent e){
-                    
+                        // Do nothing
                     }
         
                     @Override
                     public void mouseEntered(MouseEvent e){
-                       
+                        // Track what cell the mouse it currently in
+                        currentRow = button.getRow();
+                        currentColumn = button.getColumn();
                     }
         
                     @Override
                     public void mouseExited(MouseEvent e){
-                        
+                        // Do nothing
                     }
         
                     @Override
                     public void mousePressed(MouseEvent e){
-                        
+
+                        // If the left click is pressed then log it
+                        if(e.getButton() == MouseEvent.BUTTON1) {
+                            leftClick = true;
+                        }
+
+                        // If the right mouse button is clicked then mark the cell
+                        if(e.getButton() == MouseEvent.BUTTON3){
+                            rightClick = true;
+                            // int flags = board.rightClick(button.getRow(), button.getColumn());
+                            int flags = board.rightClick(currentRow, currentColumn);
+                            // Use the number of flags to update the number of unflagged mines
+
+                            // Update the display after clicking a button
+                            updateDisplay();
+                        }
                     }
         
                     @Override
                     public void mouseReleased(MouseEvent e){
-                        // Do nothing if the board has already been won or lost
-                        if (board.isWon() || board.isLost()) return;
 
-                        // If the left click is pressed
+                        // If the right mouse button is released and the left is not being pressed do nothing
+                        if(e.getButton() == MouseEvent.BUTTON3 && !leftClick) {
+                            rightClick = false;
+                            return;
+                        }
+
+                        int res = 0;
+
+                        // If the left click is released and the cell is not marked
                         if(e.getButton() == MouseEvent.BUTTON1){
-                            boolean notLost = board.open(button.getRow(), button.getColumn());
+                            leftClick = false;
 
-                            // Handle if the game was lost
-                            if(!notLost) {
-                                // Indicate that this was the button that lost the game
-                                button.setLost(true);
-                                handleLoss();
+                            // If the right mouse button is also being clicked cascade the cell
+                            if (rightClick) {
+                                // res = board.doubleClick(button.getRow(), button.getColumn());
+                                res = board.doubleClick(currentRow, currentColumn);
                             }
 
-                            updateDisplay(); // Update the display after clicking a button
+                            // Otherwise open the square normally
+                            else {
+                                // res = board.leftClick(button.getRow(), button.getColumn());
+                                res = board.leftClick(currentRow, currentColumn);
+                            }
                         } 
                         
-                        // If the right click is pressed
+                        // If the right click is released
                         if(e.getButton() == MouseEvent.BUTTON3){
-                            button.mark();
+                            rightClick = false;
+
+                            // If the left mouse button was also being clicked at the same time cascade the square
+                            if (leftClick) {
+                                // res = board.doubleClick(button.getRow(), button.getColumn());
+                                res = board.doubleClick(currentRow, currentColumn);
+                            }
                         }
 
-                        // Handle if the game has been won
-                        boolean won = board.checkWon();
-                        if (won) {
-                           handleWin();
-                        }
+                        // Handle if the game was lost
+                        if (res == -1) handleLoss();
+
+                        // Handle if the game was won
+                        if (res == 1) handleWin();
+                        
+                        // Update the display after clicking a button
+                        updateDisplay(); 
 
                     }
                 });
+                button.setAppearance(); // Set the appearance of the button
                 buttons.get(i).add(button); // add the buttons to the list of buttons
                 panel.add(button);
             }
@@ -171,13 +213,8 @@ public class Display {
     // Method to handle losing the game
     public void handleLoss() {
         // Set the reset button icon
-        try {
-            BufferedImage buttonIcon = ImageIO.read(new File("img/dead.png"));
-            restart.setIcon(new ImageIcon(buttonIcon.getScaledInstance(25, -1, Image.SCALE_DEFAULT))); // Set the icon on the button
-            restart.setText("");
-        } catch (IOException e) {
-            restart.setText("L");
-        }
+        setResetIcon("img/dead.png", "L");
+
 
         // Stop the timer (for later when the timer is implemented)
     }
@@ -185,27 +222,33 @@ public class Display {
     // Method to handle winning the game
     public void handleWin() {
         // Set the reset button icon
+        setResetIcon("img/sunglasses.png", "W");
+
+        // Stop the timer (for later when the timer is implemented)
+    }
+
+    // Method to set the icon of the reset button
+    public void setResetIcon(String icon, String altText) {
         try {
-            BufferedImage buttonIcon = ImageIO.read(new File("img/sunglasses.png"));
+            BufferedImage buttonIcon = ImageIO.read(new File(icon));
             restart.setIcon(new ImageIcon(buttonIcon.getScaledInstance(25, -1, Image.SCALE_DEFAULT))); // Set the icon on the button
             restart.setText("");
         } catch (IOException e) {
-            restart.setText("W");
+            restart.setText(altText);
         }
-
-        // Stop the timer (for later when the timer is implemented)
     }
 
     // Method to update the display
     public void updateDisplay(){
         for(int i = 0; i < board.getDisplay().size(); i++){
             for(int j = 0; j < board.getDisplay().get(i).size(); j++){
-                if(board.getDisplay().get(i).get(j)){
-                    buttons.get(i).get(j).open();
-                }
+                // Update the appearance of every button
+                buttons.get(i).get(j).setAppearance();
             }
         }
-        frame.revalidate(); // Reload the display
+
+        // Reload the display
+        frame.revalidate(); 
     }
 }
 
