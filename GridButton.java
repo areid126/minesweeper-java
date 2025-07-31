@@ -14,6 +14,11 @@ public class GridButton extends JLabel{
     private Board game; // The game this button is associated with
     private int currentValue;
     private int currentDisplay;
+    private static final int SIZE = 20;
+
+    // Constants for borders
+    private final static BevelBorder CLOSED_BORDER = new BevelBorder(BevelBorder.RAISED, Colours.BORDER_OUTER, Colours.BORDER_SHADOW);
+    private final static MatteBorder OPEN_BORDER = new MatteBorder(1, 1, 0, 0, Colours.BORDER_SHADOW);
 
     public GridButton(int row, int column, int value, Board game){
 
@@ -30,6 +35,9 @@ public class GridButton extends JLabel{
         setFocusable(false);
         setOpaque(true);
         setForeground(Color.BLACK);
+        setPreferredSize(new Dimension(SIZE, SIZE));
+        setMinimumSize(new Dimension(SIZE, SIZE));
+        setMaximumSize(new Dimension(SIZE, SIZE));
     }
 
     // Change the game associated with the board
@@ -63,58 +71,36 @@ public class GridButton extends JLabel{
         currentValue = game.get(ROW, COLUMN); // Update the current value
 
         // If the cell is hidden then hide it
-        if (display == Board.CLOSED) setAppearanceHidden();
+        if (display == Board.CLOSED) setAppearanceHidden(null, null);
         // If the cell is marked then mark it
-        else if (display == Board.FLAGGED) setAppearanceMarked();
-        // If the cell is incorrectly marked then mark it as incorrect
-        else if (display == Board.NO_MINE) setAppearanceIncorrectlyMarked();
+        else if (display == Board.FLAGGED) setAppearanceHidden("img/flag.png", "F");
         // If the cell is open then open it
         else setAppearanceOpen();
     }
 
-    public void setAppearanceHidden() {
-        // Set the border
-        setBorder(new BevelBorder(BevelBorder.RAISED, Colours.unopenedTop, Colours.unopenedBottom));
-        // Set background colour
-        setBackground(Colours.unopened);
-        // Make sure there is no text or icon
-        setText("");
-        setIcon(null);
-    }
 
-    public void setAppearanceMarked() {
+    public void setAppearanceHidden(String imgPath, String altText) {
         // Set the border
-        setBorder(new BevelBorder(BevelBorder.RAISED, Colours.unopenedTop, Colours.unopenedBottom));
+        setBorder(CLOSED_BORDER);
         // Set background colour
-        setBackground(Colours.unopened);
-        // Make sure there is no text
-        setText("");
-        // Set the flag icon for the button
-        setButtonIcon("img/flag.png", "F");
-    }
-
-    public void setAppearanceIncorrectlyMarked() {
-        // Set the border of the cell
-        setBorder(new MatteBorder(1, 1, 0, 0, Colours.unopenedBottom));
-        // Set background colour
-        setBackground(Colours.unopened);
-        // Make sure there is no text
-        setText("");
-        // Set the incorrect flag icon for the button
-        setButtonIcon("img/incorrectMine.png", "N");
+        setBackground(Colours.BACKGROUND);
+        // Set the icon for the button
+        setButtonIcon(imgPath, altText);
     }
 
     public void setAppearanceOpen() {
         int value = game.get(ROW, COLUMN);
+        int display = game.getDisplay(ROW, COLUMN);
 
         // Set the value of the cell
         if (value != -1 && value != 0) setText(value + "");
         // Remove the icon when opening the cell
         if (value != -1) setIcon(null); 
         // Set the border of the cell
-        setBorder(new MatteBorder(1, 1, 0, 0, Colours.unopenedBottom));
+        setBorder(OPEN_BORDER);
         // Set background colour
-        if (game.getDisplay().get(ROW).get(COLUMN) != Board.LOST) setBackground(Colours.unopened);
+        if (display != Board.LOST) setBackground(Colours.BACKGROUND);
+        else setBackground(Colours.RED);
         
         // Set the foreground colour based on the value of the cell
         if (value == 0) setText("");
@@ -128,8 +114,8 @@ public class GridButton extends JLabel{
         else if (value == 8) setForeground(Colours.EIGHT);
         else if (value == -1) setButtonIcon("img/bomb.png", "B");
 
-        // If the button is for the mine that lost the game then change the background colour
-        if (game.getDisplay().get(ROW).get(COLUMN) == Board.LOST) setBackground(Colours.counter);
+        // If the display is incorrectly flagged then set the appearance
+        if (display == Board.NO_MINE) setButtonIcon("img/incorrectMine.png", "N");
     }
 
     // Function for getting an icon
@@ -146,7 +132,7 @@ public class GridButton extends JLabel{
                 // If there is an error loading the image then set the text to be the altText instead
                 setText(altText);
                 // Set the altText to be red when displaying flags
-                if (altText.equals("F")) setForeground(Colours.counter);
+                if (altText.equals("F")) setForeground(Colours.RED);
                 // Set the foreground colour to be black when displaying altText for mines
                 else setForeground(Color.BLACK);
             }

@@ -43,6 +43,7 @@ public class Board{
         return board.get(row).get(column);
     }
 
+    // Getter for a cell of the display
     public int getDisplay(int row, int column) {
         return display.get(row).get(column);
     }
@@ -119,30 +120,8 @@ public class Board{
         }
     }
 
-    // Method to open a specific cell of the board (returns false when the game is lost)
-    public boolean open(int row, int column){
-        display.get(row).set(column, OPEN); // Set the clicked cell to be open
-
-        // Perform the checks on the number in that cell
-        int value = board.get(row).get(column);
-        if(value == -1){
-            // The player has clicked a mine and so the game ends
-            lost = true;
-            openMines(); // Open all the cells that contain mines
-            return false;
-        }
-        if(value == 0){
-            // Cascade the cells so that everything opens
-            cascade(row, column);
-        }
-        // Does not need to do anything else if any other cell is clicked
-
-        // Return true if the game was not lost
-        return true;
-    }
-
-    // Open all the cells that contain mines
-    public void openMines() {
+    // Open all the cells that contain mines when the game ends
+    public void openMinesOnEnd() {
         for(int i = 0; i < HEIGHT; i++){
             for(int j = 0; j < WIDTH; j++){
                 // If a cell contains a mine open it (unless it is the cell that lost the game)
@@ -155,65 +134,6 @@ public class Board{
                     display.get(i).set(j, NO_MINE);
                 }
             }
-        }
-    }
-
-    // Version of open that takes the coords as an array
-    public void open(int[] coords){
-        open(coords[0], coords[1]);
-    }
-
-    // Method to cascade clicking a 0
-    public void cascade(int row, int column){
-        for(int i = -1; i < 2; i++){
-            for(int j = -1; j < 2; j++){
-                // Do not check the centre cell
-                int[] coords = new int[]{row+i, column+j};
-                if(!(i == 0 && j == 0) && checkValid(coords)){
-
-                    // If the cell contains a 0 then cascade that cell as well
-                    if(board.get(coords[0]).get(coords[1]) == 0 && display.get(coords[0]).get(coords[1]) == CLOSED){
-                        display.get(coords[0]).set(coords[1], OPEN);
-                        cascade(coords[0], coords[1]);
-                    }
-
-                    display.get(coords[0]).set(coords[1], OPEN);
-                }
-            }
-        }
-    }
-
-    // Method for cascading non-zero cells during the game
-    public void cascadeCell(int row, int column, boolean placeholder) {
-        // Check that the cell has the correct number of surrounding flags
-
-        // Open all non-flagged cells
-
-        for(int i = -1; i < 2; i++){
-            for(int j = -1; j < 2; j++){
-                // Do not check the centre cell
-                int[] coords = new int[]{row+i, column+j};
-                if(!(i == 0 && j == 0) && checkValid(coords)){
-                    // If the cell contains a 0 then cascade that cell as well
-                    if(board.get(coords[0]).get(coords[1]) == 0 && display.get(coords[0]).get(coords[1]) == CLOSED){
-                        display.get(coords[0]).set(coords[1], OPEN);
-                        cascade(coords[0], coords[1]);
-                    }
-                    
-                    display.get(coords[0]).set(coords[1], OPEN);
-                }
-            }
-        }
-    }
-
-
-    // Prints the board to the terminal
-    public void print(){
-        for(int i = 0; i < HEIGHT; i++){
-            for(int j = 0; j < WIDTH; j++){
-                System.out.print(board.get(i).get(j) + "    ");
-            }
-            System.out.println();
         }
     }
 
@@ -280,7 +200,7 @@ public class Board{
             // Mark is as the cell that lost
             display.get(row).set(column, LOST);
             // Open all other mine cells
-            openMines();
+            openMinesOnEnd();
             // Set lost to true
             lost = true;
             // Return -1 to indicate that the game has been lost
@@ -295,7 +215,8 @@ public class Board{
         // Mark the cell as open
         display.get(row).set(column, OPEN);
         // If the cell is a zero then cascade the surrounding cells
-        if(board.get(row).get(column) == 0) cascade(row, column);
+        // if(board.get(row).get(column) == 0) cascade(row, column);
+        if(board.get(row).get(column) == 0) cascadeCell(row, column);
         
         // Check if that game has been won and return 1 if it has been
         if(checkWon()) return 1;
@@ -339,7 +260,7 @@ public class Board{
         // If it is the correct number cascade the cell (and handle if the game was lost when cascading)
         if (!cascadeCell(row, column)) {
             // Open all other mine cells
-            openMines();
+            openMinesOnEnd();
             // Set lost to true
             lost = true;
             // Return -1 to indicate that the game has been lost
