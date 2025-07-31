@@ -80,6 +80,7 @@ public class Display extends JFrame {
 
         // Format the frame
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setIconImage(new ImageIcon("img/smile.png").getImage());
         pack();
         setResizable(false);
         setVisible(true);
